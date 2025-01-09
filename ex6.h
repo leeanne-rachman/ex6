@@ -126,6 +126,13 @@ PokemonNode *createPokemonNode(const PokemonData *data);
 OwnerNode *createOwner(char *ownerName, PokemonNode *starter);
 
 /**
+ * @brief append owner to last place in owner list
+ * @param owner the new owner to add
+ * Why we made it: add owner to ownerList easily
+ */
+void addOwner(OwnerNode *owner);
+
+/**
  * @brief Free one PokemonNode (including name).
  * @param node pointer to node
  * Why we made it: Avoid memory leaks for single nodes.
@@ -457,6 +464,8 @@ void freeAllOwners(void);
  * Why we made it: Our top-level UI that keeps the user engaged until they exit.
  */
 void mainMenu(void);
+
+OwnerNode *findLastOwner();
 
 // Array of Pokemon data
 static const PokemonData pokedex[] = {
