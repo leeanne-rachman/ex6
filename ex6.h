@@ -7,8 +7,7 @@
 #include <string.h>
 
 
-typedef enum
-{
+typedef enum {
     GRASS,
     FIRE,
     WATER,
@@ -26,14 +25,12 @@ typedef enum
     ICE
 } PokemonType;
 
-typedef enum
-{
+typedef enum {
     CANNOT_EVOLVE,
     CAN_EVOLVE
 } EvolutionStatus;
 
-typedef struct PokemonData
-{
+typedef struct PokemonData {
     int id;
     char *name;
     PokemonType TYPE;
@@ -43,20 +40,18 @@ typedef struct PokemonData
 } PokemonData;
 
 // Binary Tree Node (for Pokédex)
-typedef struct PokemonNode
-{
+typedef struct PokemonNode {
     PokemonData *data;
     struct PokemonNode *left;
     struct PokemonNode *right;
 } PokemonNode;
 
 // Linked List Node (for Owners)
-typedef struct OwnerNode
-{
-    char *ownerName;          // Owner's name
+typedef struct OwnerNode {
+    char *ownerName; // Owner's name
     PokemonNode *pokedexRoot; // Pointer to the root of the owner's Pokédex
-    struct OwnerNode *next;   // Next owner in the linked list
-    struct OwnerNode *prev;   // Previous owner in the linked list
+    struct OwnerNode *next; // Next owner in the linked list
+    struct OwnerNode *prev; // Previous owner in the linked list
 } OwnerNode;
 
 // Global head pointer for the linked list of owners
@@ -193,6 +188,8 @@ PokemonNode *removeNodeBST(PokemonNode *root, int id);
  */
 PokemonNode *removePokemonByID(PokemonNode *root, int id);
 
+PokemonNode *findMinInSubTree(PokemonNode *root);
+
 /* ------------------------------------------------------------
    4) Generic BST Traversals (Function Pointers)
    ------------------------------------------------------------ */
@@ -245,12 +242,49 @@ void printPokemonNode(PokemonNode *node);
    5) Display Methods (BFS, Pre, In, Post, Alphabetical)
    ------------------------------------------------------------ */
 
-typedef struct
-{
+typedef struct {
     PokemonNode **nodes;
     int size;
     int capacity;
 } NodeArray;
+
+typedef struct QueueNode {
+    PokemonNode *node;
+    struct QueueNode *next;
+} QueueNode;
+
+typedef struct {
+    QueueNode *front;
+    QueueNode *rear;
+} Queue;
+
+/**
+ * @brief create a queue for bfs
+ * Why we made it: We create a queue for printing the bst in a bfs
+ */
+Queue *createQueue();
+
+/**
+ * @brief Create a node for the queue
+ * @param node pointer to PokemonNode
+ * Why we made it: We store the PokemonNodes in a queue in order to print the tree in BFS
+ */
+QueueNode *createNode(PokemonNode *node);
+
+/**
+ * @brief insert a node in the queue
+ * @param queue pointer to the queue
+ * @param node pointer to node to add
+ * Why we made it: We add nodes from the tree to the queue for BFS print
+ */
+void enQueue(Queue *queue, PokemonNode *node);
+
+/**
+ * @brief remove a node from the queue
+ * @param queue pointer to the queue
+ * Why we made it: We need to remove nodes from the queue after BFS print
+ */
+PokemonNode *deQueue(Queue *queue);
 
 /**
  * @brief Initialize a NodeArray with given capacity.
@@ -407,6 +441,13 @@ void removeOwnerFromCircularList(OwnerNode *target);
  */
 OwnerNode *findOwnerByName(const char *name);
 
+/**
+ * @brief Find last owner in the circular list.
+ * @return pointer to the matching OwnerNode or NULL
+ * Why we made it: We often need to find last owner quickly.
+ */
+OwnerNode *findLastOwner();
+
 /* ------------------------------------------------------------
    10) Owner Menus
    ------------------------------------------------------------ */
@@ -464,8 +505,6 @@ void freeAllOwners(void);
  * Why we made it: Our top-level UI that keeps the user engaged until they exit.
  */
 void mainMenu(void);
-
-OwnerNode *findLastOwner();
 
 // Array of Pokemon data
 static const PokemonData pokedex[] = {
@@ -619,6 +658,7 @@ static const PokemonData pokedex[] = {
     {148, "Dragonair", DRAGON, 61, 84, CAN_EVOLVE},
     {149, "Dragonite", DRAGON, 91, 134, CANNOT_EVOLVE},
     {150, "Mewtwo", PSYCHIC, 106, 110, CANNOT_EVOLVE},
-    {151, "Mew", PSYCHIC, 100, 100, CANNOT_EVOLVE}};
+    {151, "Mew", PSYCHIC, 100, 100, CANNOT_EVOLVE}
+};
 
 #endif // EX6_H
