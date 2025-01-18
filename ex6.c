@@ -406,18 +406,8 @@ int compareByNameNode(const void *a, const void *b) {
 void enterExistingPokedexMenu() {
     // list owners
     printf("\nExisting Pokedexes:\n");
-    const OwnerNode *current = ownerHead;
-    int index = 1;
-    while (current->next != current) {
-        printf("%d .%s\n", index, current->ownerName);
-        index++;
-        current = current->next;
-    }
-
-    if (current->next == current) {
-        printf("%d .%s\n", index, current->ownerName);
-    }
-
+    printAllOwners();
+    int index;
     printf("Choose a Pokedex by number: \n");
     scanf("%d", &index);
     OwnerNode *pokedex = ownerHead;
@@ -614,8 +604,10 @@ void evolvePokemon(OwnerNode *owner) {
     PokemonNode *root = owner->pokedexRoot;
     if (root == NULL) {
         printf("Pokedex is empty\n");
+
         return;
     }
+
     int id;
     printf("Enter ID of Pokemon to evolve: ");
     scanf("%d", &id);
@@ -623,10 +615,12 @@ void evolvePokemon(OwnerNode *owner) {
     PokemonNode *node = searchPokemonBFS(root, id);
     if (node == NULL) {
         printf("No pokemon with ID  %d found\n", id);
+
         return;
     }
     if (node->data->CAN_EVOLVE == CANNOT_EVOLVE) {
         printf("%s (ID %d) cannot evolve.\n", node->data->name, node->data->id);
+
         return;
     }
 
@@ -666,15 +660,15 @@ void mainMenu() {
             case 2:
                 enterExistingPokedexMenu();
                 break;
-            // case 3:
-            //     deletePokedex();
-            //     break;
-            // case 4:
-            //     mergePokedexMenu();
-            //     break;
-            // case 5:
-            //     sortOwners();
-            //     break;
+            case 3:
+                deletePokedex();
+                break;
+            case 4:
+                mergePokedexMenu();
+                break;
+            case 5:
+                sortOwners();
+                break;
             // case 6:
             //     printOwnersCircular();
             //     break;
@@ -746,20 +740,21 @@ OwnerNode *findOwnerByName(const char *name) {
         return NULL;
     }
     //if only one owner
-    if (current->next == current) {
+    if (current->next == ownerHead) {
         if (strcmp(current->ownerName, name) == 0) {
             return current;
         }
         return NULL;
     }
     //get to last owner which points to itself
-    while (current->next != current) {
+    while (current->next != ownerHead) {
         if (strcmp(current->ownerName, name) == 0) {
             return current;
         }
         current = current->next;
     }
-    return NULL;
+
+    return current;
 }
 
 PokemonNode *createPokemonNode(const PokemonData *data) {
@@ -789,19 +784,12 @@ OwnerNode *createOwner(char *ownerName, PokemonNode *starter) {
         exit(1);
     }
 
-    //malloc for all owner's details. Owner name was already malloced
-    owner->pokedexRoot = malloc(sizeof(PokemonNode));
-    if (owner->ownerName == NULL || owner->pokedexRoot == NULL) {
-        free(owner);
-        exit(1);
-    }
-
     owner->ownerName = ownerName;
-    owner->next = owner;
-    owner->prev = findLastOwner();
-
-    strcpy(owner->ownerName, ownerName);
     owner->pokedexRoot = starter;
+    strcpy(owner->ownerName, ownerName);
+
+    owner->next = NULL;
+    owner->prev = NULL;
 
     return owner;
 }
@@ -811,7 +799,7 @@ OwnerNode *findLastOwner() {
     if (current == NULL) {
         return NULL;
     }
-    while (current->next != current) {
+    while (current->next != ownerHead) {
         current = current->next;
     }
 
@@ -819,19 +807,159 @@ OwnerNode *findLastOwner() {
 }
 
 void addOwner(OwnerNode *newOwner) {
-    OwnerNode *current = ownerHead;
     //if new owner is first
-    if (current == NULL) {
+    if (ownerHead == NULL) {
         ownerHead = newOwner;
         //only one so points to himself
         ownerHead->next = ownerHead;
         ownerHead->prev = ownerHead;
         return;
     }
-    //get to last owner
-    while (current->next != current) {
+
+    OwnerNode *lastOwner = findLastOwner();
+    // Connect new owner to list
+    newOwner->next = ownerHead;
+    newOwner->prev = lastOwner;
+    // Connect list to new owner
+    lastOwner->next = newOwner;
+    ownerHead->prev = newOwner;
+}
+
+void printAllOwners() {
+    if (ownerHead == NULL) {
+        printf("No existing Pokedexes.\n");
+
+        return;
+    }
+
+    const OwnerNode *current = ownerHead;
+    int index = 1;
+
+    do {
+        printf("%d. %s\n", index, current->ownerName);
+        current = current->next;
+        index++;
+    } while (current != ownerHead);
+}
+
+void deletePokedex(void) {
+    if (ownerHead == NULL) {
+        printf("No existing Pokedexes to delete.\n");
+
+        return;
+    }
+
+    printf("\n=== Delete a Pokedex ===\n");
+    printAllOwners();
+    printf("Choose a Pokedex to delete by number: ");
+    int index;
+    scanf("%d", &index);
+
+    OwnerNode *current = ownerHead;
+    for (int i = 0; i < index - 1; i++) {
         current = current->next;
     }
 
-    current->next = newOwner;
+    printf("Deleting %s's entire Pokedex...\n", current->ownerName);
+    removePokedex(current);
+    freePokemonTree(current->pokedexRoot);
+    printf("Pokedex deleted.\n");
+}
+
+void removePokedex(OwnerNode *owner) {
+    // If only one owner
+    if (owner->next == owner && owner->prev == owner) {
+        ownerHead = NULL;
+    }
+    // If deleting head of list
+    else if (owner == ownerHead) {
+        ownerHead = owner->next;
+        owner->prev->next = owner->next;
+        owner->next->prev = owner->prev;
+    }
+    // Deleting from middle or end
+    else {
+        owner->prev->next = owner->next;
+        owner->next->prev = owner->prev;
+    }
+
+    free(owner);
+}
+
+void mergePokedexMenu(void) {
+    //check if no owners or one owner
+    if (ownerHead == NULL || ownerHead->next == ownerHead) {
+        printf("Not enough owners to merge.\n");
+        return;
+    }
+
+    printf("=== Merge Pokedexes ===\nEnter name of first owner: ");
+    char *firstName = getDynamicInput();;
+    printf("Enter name of second owner: ");
+    char *secondName = getDynamicInput();;
+
+    OwnerNode *firstOwner = findOwnerByName(firstName);
+    OwnerNode *secondOwner = findOwnerByName(secondName);
+
+    if (firstOwner == NULL || secondOwner == NULL) {
+        printf("One or both owners not found.\n");
+        return;
+    }
+
+    mergePokedexes(firstOwner, secondOwner);
+    removePokedex(secondOwner);
+    printf("Successfully merged %s's Pokedex into %s's Pokedex!\n", secondName, firstName);
+}
+
+void mergePokedexes(OwnerNode *firstOwner, OwnerNode *secondOwner) {
+    Queue *queue = createQueue();
+    enQueue(queue, secondOwner->pokedexRoot);
+
+    while (queue->front != NULL) {
+        PokemonNode *current = deQueue(queue);
+        // Insert into first owner's Pokedex
+        firstOwner->pokedexRoot = insertPokemonNode(firstOwner->pokedexRoot, current);
+        // Add left and right children to queue if they exist
+        if (current->left) {
+            enQueue(queue, current->left);
+        }
+        if (current->right) {
+            enQueue(queue, current->right);
+        }
+    }
+
+    free(queue);
+}
+
+void sortOwners(void) {
+    //if empty or only one
+    if (ownerHead == NULL || ownerHead->next == ownerHead) {
+        printf("0 or 1 owners only => no need to sort.\n");
+        return;
+    }
+
+    OwnerNode *current;
+    int switched = 1;
+
+    while (switched == 1) {
+        switched = 0;
+        current = ownerHead;
+        while(current->next != ownerHead) {
+            if (strcmp(current->ownerName, current->next->ownerName) > 0) {
+            
+            }
+        }
+        if (strcmp(current->ownerName, current->next->ownerName) > 0) {
+            OwnerNode *temp = current;
+            current = current->next;
+            current->next = temp;
+
+            if (temp->next == ownerHead) {
+                current->next->next = current;
+            } else {
+                current->next->next = current->next;
+            }
+            current->prev = current->next->prev;
+        }
+    }
 }

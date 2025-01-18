@@ -4,8 +4,6 @@
 #include <ctype.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <string.h>
-
 
 typedef enum {
     GRASS,
@@ -470,11 +468,14 @@ void openPokedexMenu(void);
  */
 void deletePokedex(void);
 
+void removePokedex(OwnerNode *owner);
 /**
  * @brief Merge the second owner's Pokedex into the first, then remove the second owner.
  * Why we made it: BFS copy demonstration plus removing an owner.
  */
 void mergePokedexMenu(void);
+
+void mergePokedexes(OwnerNode *firstOwner, OwnerNode *secondOwner);
 
 /* ------------------------------------------------------------
    11) Printing Owners in a Circle
@@ -485,6 +486,8 @@ void mergePokedexMenu(void);
  * Why we made it: Demonstrates stepping through a circular list in a chosen direction.
  */
 void printOwnersCircular(void);
+
+void printAllOwners();
 
 /* ------------------------------------------------------------
    12) Cleanup All Owners at Program End
