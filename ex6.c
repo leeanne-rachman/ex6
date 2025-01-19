@@ -404,6 +404,10 @@ int compareByNameNode(const void *a, const void *b) {
 // Sub-menu for existing Pokedex
 // // --------------------------------------------------------------
 void enterExistingPokedexMenu() {
+    if(ownerHead == NULL) {
+        printf("No existing Pokedexes.\n");
+        return;
+    }
     // list owners
     printf("\nExisting Pokedexes:\n");
     printAllOwners();
@@ -690,11 +694,15 @@ void freeAllOwners(void) {
     }
 
     OwnerNode *current = ownerHead;
-    while (current->next != ownerHead) {
+    OwnerNode *next;
+
+    do {
+        next = current->next;
         freePokemonTree(current->pokedexRoot);
         freeOwnerNode(current);
-        current = current->next;
-    }
+        current = next;
+    } while (current != ownerHead);
+
     ownerHead = NULL;
 }
 
@@ -721,7 +729,7 @@ void freeOwnerNode(OwnerNode *owner) {
 }
 
 void openPokedexMenu(void) {
-    printf("Your name:\n");
+    printf("Your name: ");
     char *ownerName = getDynamicInput();
     if (findOwnerByName(ownerName) != NULL) {
         printf("Owner %s already exists. Not creating a new Pokedex.\n", ownerName);
@@ -885,26 +893,35 @@ void deletePokedex(void) {
 
     printf("Deleting %s's entire Pokedex...\n", current->ownerName);
     removePokedex(current);
-    freePokemonTree(current->pokedexRoot);
     printf("Pokedex deleted.\n");
 }
 
 void removePokedex(OwnerNode *owner) {
+    // Free the Pokemon tree first
+    if (owner->pokedexRoot != NULL) {
+        freePokemonTree(owner->pokedexRoot);
+        owner->pokedexRoot = NULL;
+    }
+
     // If only one owner
     if (owner->next == owner && owner->prev == owner) {
         ownerHead = NULL;
+        freeOwnerNode(owner);
+        return;
     }
+
+    // Save necessary pointers before modifying anything
+    OwnerNode *nextNode = owner->next;
+    OwnerNode *prevNode = owner->prev;
+
     // If deleting head of list
-    else if (owner == ownerHead) {
-        ownerHead = owner->next;
-        owner->prev->next = owner->next;
-        owner->next->prev = owner->prev;
+    if (owner == ownerHead) {
+        ownerHead = nextNode;
     }
-    // Deleting from middle or end
-    else {
-        owner->prev->next = owner->next;
-        owner->next->prev = owner->prev;
-    }
+
+    // Fix the links (works for both head and non-head cases)
+    prevNode->next = nextNode;
+    nextNode->prev = prevNode;
 
     freeOwnerNode(owner);
 }
@@ -938,21 +955,26 @@ void mergePokedexMenu(void) {
 
 void mergePokedexes(OwnerNode *firstOwner, OwnerNode *secondOwner) {
     Queue *queue = createQueue();
+    PokemonNode *originalRoot = secondOwner->pokedexRoot;
     enQueue(queue, secondOwner->pokedexRoot);
 
     while (queue->front != NULL) {
         PokemonNode *current = deQueue(queue);
-        // Insert into first owner's Pokedex
-        firstOwner->pokedexRoot = insertPokemonNode(firstOwner->pokedexRoot, current);
-        // Add left and right children to queue if they exist
         if (current->left) {
             enQueue(queue, current->left);
         }
         if (current->right) {
             enQueue(queue, current->right);
         }
+
+        // Create new node and insert into first owner's tree
+        PokemonNode *newNode = createPokemonNode(current->data);
+        firstOwner->pokedexRoot = insertPokemonNode(firstOwner->pokedexRoot, newNode);
     }
 
+    // Free  second owner's tree after merging
+    freePokemonTree(originalRoot);
+    secondOwner->pokedexRoot = NULL;
     free(queue);
 }
 
@@ -997,5 +1019,33 @@ void sortOwners(void) {
 }
 
 void printOwnersCircular(void) {
+    if (ownerHead == NULL) {
+        printf("No owners.\n");
+        return;
+    }
 
+    char direction;
+    printf("Enter direction (F or B): ");
+    scanf(" %c", &direction);
+    while (direction != 'f' && direction != 'F' && direction != 'b' && direction != 'B') {
+        printf("Invalid direction, must be F or B.\n");
+        scanf("%c", &direction);
+    }
+
+    OwnerNode *current = ownerHead;
+    scanf("%*c");
+    int prints = readIntSafe("How many prints? ");
+    if (direction == 'f' || direction == 'F') {
+        for (int i = 0; i < prints; i++) {
+            printf("[%d] %s\n", i + 1, current->ownerName);
+            current = current->next;
+        }
+
+        return;
+    }
+
+    for (int i = 0; i < prints; i++) {
+        printf("[%d] %s\n", i + 1, current->ownerName);
+        current = current->prev;
+    }
 }
