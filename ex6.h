@@ -186,6 +186,12 @@ PokemonNode *removeNodeBST(PokemonNode *root, int id);
  */
 PokemonNode *removePokemonByID(PokemonNode *root, int id);
 
+/**
+ * @brief Find minimum node in the right sub tree
+ * @param root BST root
+ * @return minimum node in right sub tree
+ * Why we made it: is relevant for keeping the structure of BST correct when removing a node
+ */
 PokemonNode *findMinInSubTree(PokemonNode *root);
 
 /* ------------------------------------------------------------
@@ -468,13 +474,25 @@ void openPokedexMenu(void);
  */
 void deletePokedex(void);
 
+/**
+ * @brief Helper function for deleting a Pokedex
+ * @param owner is the owner to remove
+ * Why we made it: does the functionality of removing a node of owner from linked list
+ */
 void removePokedex(OwnerNode *owner);
+
 /**
  * @brief Merge the second owner's Pokedex into the first, then remove the second owner.
  * Why we made it: BFS copy demonstration plus removing an owner.
  */
 void mergePokedexMenu(void);
 
+/**
+ * @brief does the actual merge: merge the second owner's Pokedex into the first, then remove the second owner.
+ * @param firstOwner is the owner to merge to
+ * @param secondOwner is the owner to merge from and remove
+ * Why we made it: sepperate logic and inputs to different functions
+ */
 void mergePokedexes(OwnerNode *firstOwner, OwnerNode *secondOwner);
 
 /* ------------------------------------------------------------
@@ -487,6 +505,10 @@ void mergePokedexes(OwnerNode *firstOwner, OwnerNode *secondOwner);
  */
 void printOwnersCircular(void);
 
+/**
+ * @brief Print all owners
+ * Why we made it: Needed in several functions
+ */
 void printAllOwners();
 
 /* ------------------------------------------------------------
